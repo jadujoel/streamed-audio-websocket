@@ -7,16 +7,18 @@ function log(...args: any[]) {
 }
 
 main()
-async function main() {
+async function main(context?: AudioContext) {
   const sampleRate = 48_000
-  const context = new AudioContext({ sampleRate, latencyHint: "playback" })
+  context ??= new AudioContext({ sampleRate, latencyHint: "playback" })
+  console.log("Main", context.state)
   if (context.state !== "running") {
     const html = document.body.innerHTML
     document.body.innerHTML = ""
     const btn = button({
       text: "Start",
-      onclick: () => {
-        main()
+      onclick: async () => {
+        await context.resume()
+        main(context)
         btn.remove()
         document.body.innerHTML = html
       }
