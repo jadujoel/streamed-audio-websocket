@@ -25,7 +25,7 @@ async function main() {
     if (socketParam === null) {
       return undefined
     }
-    return decodeURIComponent(socketParam)
+    return decodeURIComponent(socketParam).replaceAll("\"", "")
   }
 
   const initEl = button({

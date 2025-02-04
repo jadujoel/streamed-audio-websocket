@@ -10,6 +10,19 @@ main()
 async function main() {
   const sampleRate = 48_000
   const context = new AudioContext({ sampleRate, latencyHint: "playback" })
+  if (context.state !== "running") {
+    const html = document.body.innerHTML
+    document.body.innerHTML = ""
+    const btn = button({
+      text: "Start",
+      onclick: () => {
+        main()
+        btn.remove()
+        document.body.innerHTML = html
+      }
+    })
+    return
+  }
   await Decoder.addModule(context, window.location.pathname + "/processor.js");
   const params = new URLSearchParams(`${window.location.search}&${window.location.hash.slice(1)}`)
   const decoder = Decoder.create(context, {
@@ -22,7 +35,7 @@ async function main() {
     if (socketParam === null) {
       return undefined
     }
-    return decodeURIComponent(socketParam)
+    return decodeURIComponent(socketParam).replaceAll("\"", "")
   }
   return
 }
