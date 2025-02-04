@@ -1,24 +1,38 @@
+import { canStart } from '../tools'
 import { Encoder } from "./encoder"
 console.log("encoder.ts")
 
 main()
 async function main() {
+  document.body.innerText = "Click To Start"
+  await canStart()
+  document.body.innerText = ""
+
   const context = new AudioContext({ sampleRate: 48000, latencyHint: "playback" })
-  await Encoder.addModule(context, window.location.pathname + "/processor.js")
+  await Encoder.addModule(context) // , window.location.pathname + "/processor.js")
   const src = context.createBufferSource()
   src.buffer = await fetchAudio(context, "../48kb.2ch.366384529314489.opus")
   let bitrate = 48_000
-  const bitrateEl = selector({
-    label: "Bitrate",
-    alternatives: ["12b", "24kb", "48kb", "96kb"],
-    selected: 2,
-    onchange(index) {
-      bitrate = [12_000, 24_000, 48_000, 96_000][index]
-      console.log(`Selected index ${index} with bitrate ${bitrate}`)
-    }
-  })
 
+  const gain = context.createGain()
+  // const bitrateEl = selector({
+  //   label: "Bitrate",
+  //   alternatives: ["12b", "24kb", "48kb", "96kb"],
+  //   selected: 2,
+  //   onchange(index) {
+  //     bitrate = [12_000, 24_000, 48_000, 96_000][index]
+  //     console.log(`Selected index ${index} with bitrate ${bitrate}`)
+  //   }
+  // })
   const params = new URLSearchParams(`${window.location.search}&${window.location.hash.slice(1)}`)
+
+  const encoder = Encoder.create(context, {
+    bitratePerChannel: bitrate,
+    websocketUrl: getWebSocketUrl(),
+    // workerUrl: window.location.pathname + "/worker.js"
+  })
+  src.connect(gain).connect(encoder.node).connect(context.destination)
+  encoder.start()
 
   function getWebSocketUrl() {
     const socketParam = params.get("socket")
@@ -27,34 +41,51 @@ async function main() {
     }
     return decodeURIComponent(socketParam).replaceAll("\"", "")
   }
+  const fileButton = button({
+    text: "Start File",
+    onclick: () => {
+      try {
+        src.start()
+      } catch {}
 
-  const initEl = button({
-    text: "Init",
-    async onclick() {
-      bitrateEl.remove()
-      initEl.remove()
-      const encoder = Encoder.create(context, {
-        bitratePerChannel: bitrate,
-        websocketUrl: getWebSocketUrl(),
-        workerUrl: window.location.pathname + "/worker.js"
-      })
-      src.connect(encoder.node).connect(context.destination)
+      fileButton.innerText = "Stop File"
+      fileButton.onclick = () => {
+        try {
+          src.stop()
+        } catch {}
+        fileButton.remove()
+      }
+    }
+  })
 
-      button({
-        text: "Start",
-        onclick: async () => {
-          encoder.start()
-          try {
-            src.start()
-          } catch {}
-        }
+  const talkButton = button({
+    text: "Talk",
+    onclick: async () => {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: false,
+          autoGainControl: false,
+          noiseSuppression: false,
+          sampleRate: 48_000,
+          backgroundBlur: false,
+        },
+        video: false,
       })
-      button({
-        text: "Stop",
-        onclick: () => {
-          encoder.stop()
-        }
-      })
+      const source = context.createMediaStreamSource(stream);
+      source.connect(gain)
+      talkButton.innerText = "Stop Talking"
+      talkButton.onclick = () => {
+        source.disconnect()
+        talkButton.remove()
+      }
+    }
+  })
+
+  const streamButton = button({
+    text: "Stop Stream",
+    onclick: () => {
+      encoder.stop()
+      streamButton.remove()
     }
   })
 }
@@ -87,16 +118,6 @@ function selector({label, alternatives, selected, onchange}: { label?: string, s
   div.append(header, select)
   document.body.appendChild(div)
   return div
-}
-
-function slider({ text, oninput }: { text?: string, oninput?: (this: GlobalEventHandlers, ev: Event) => void }): HTMLDivElement {
-  const div = document.createElement("div")
-  const label = document.createElement("H3")
-  label.innerText = text ?? ""
-  const input = document.createElement("input")
-  input.oninput = oninput ?? null
-  div.append(label, input)
-  return document.body.appendChild(div)
 }
 
 async function fetchAudio(context: AudioContext, url: string): Promise<AudioBuffer> {
