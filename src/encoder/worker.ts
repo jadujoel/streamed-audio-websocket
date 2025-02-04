@@ -37,7 +37,7 @@ type WorkerMessage = BufferMessage | StartMessage
 let state: "init" | "started" = "init"
 
 let errored = false
-self.onmessage = ({ data }: MessageEvent<WorkerMessage>) => {
+self.onmessage = async ({ data }: MessageEvent<WorkerMessage>) => {
   if (errored) {
     return
   }
@@ -77,10 +77,11 @@ self.onmessage = ({ data }: MessageEvent<WorkerMessage>) => {
     const sendView = new DataView(new ArrayBuffer(chunkSize))
     encoder = new AudioEncoder({
       error(error) {
-        console.log("[encoder] error", error)
+        console.log("[worker] error", error)
         errored = true
       },
-      output(chunk, meta) {
+      async output(chunk, meta) {
+        await socketReady
         if (socket.readyState !== globalThis.WebSocket.OPEN) {
           encoder.flush()
           try {
@@ -90,7 +91,6 @@ self.onmessage = ({ data }: MessageEvent<WorkerMessage>) => {
           }
           return
         }
-        // console.log("[encoder] output", chunk)
         if (chunk.type !== "key") {
           throw new Error("chunk type was not key, it should be")
         }

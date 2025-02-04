@@ -90,7 +90,9 @@ class EncodeProcessor extends globalThis.AudioWorkletProcessor {
     const ns = left.length
     for (let i = 0; i < ns; i++) {
       this.buffer[this.index] = left[i] * 0x7FFF
-      this.buffer[this.index + this.bufferSize] = right[i] * 0x7FFF
+      if (right) {
+        this.buffer[this.index + this.bufferSize] = right[i] * 0x7FFF
+      }
       this.index += 1
     }
     this.bufferedSamples += ns
