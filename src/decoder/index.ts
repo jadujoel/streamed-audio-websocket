@@ -24,7 +24,6 @@ async function main() {
   await Decoder.addModule(context) //, window.location.pathname + "/processor.js");
   const params = new URLSearchParams(`${window.location.search}&${window.location.hash.slice(1)}`)
   const decoder = Decoder.create(context, {
-    workerUrl: window.location.pathname + "/worker.js",
     websocketUrl: getWebSocketUrl()
   });
   decoder.node.connect(context.destination)
