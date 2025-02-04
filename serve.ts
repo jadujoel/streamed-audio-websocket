@@ -17,9 +17,10 @@ const server = Bun.serve({
     "/decoder": decoder,
   },
   async fetch(request, server) {
-    console.log("request", request.method, request.url)
-
     const pathname = new URL(request.url).pathname
+    console.log("request", request.method, request.url, pathname)
+
+
     if (pathname.endsWith(".js")) {
       const result = await Bun.build({
         entrypoints: [`src${pathname}`],

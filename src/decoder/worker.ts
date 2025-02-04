@@ -1,5 +1,3 @@
-console.log("decoder-worker.ts")
-
 const sampleRate = 48_000 as const
 const codec = "opus" as const
 const numberOfChannels = 2 as const

@@ -1,4 +1,4 @@
-import type { BufferMessage } from "./decode-worker";
+import type { BufferMessage } from "./worker";
 
 console.log("[decode-processor] initialized");
 

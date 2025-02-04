@@ -4,7 +4,7 @@ console.log("encoder.ts")
 main()
 async function main() {
   const context = new AudioContext({ sampleRate: 48000, latencyHint: "playback" })
-  await Encoder.addModule(context, "./encoder/encode-processor.js")
+  await Encoder.addModule(context, window.location.pathname + "/processor.js")
   const src = context.createBufferSource()
   src.buffer = await fetchAudio(context, "../48kb.2ch.366384529314489.opus")
   let bitrate = 48_000
@@ -27,7 +27,8 @@ async function main() {
       initEl.remove()
       const encoder = Encoder.create(context, {
         bitratePerChannel: bitrate,
-        websocketUrl: params.get("socket") ?? undefined
+        websocketUrl: params.get("socket") ?? undefined,
+        workerUrl: window.location.pathname + "/worker.js"
       })
       src.connect(encoder.node).connect(context.destination)
 

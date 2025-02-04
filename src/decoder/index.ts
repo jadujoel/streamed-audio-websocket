@@ -10,9 +10,10 @@ main()
 async function main() {
   const sampleRate = 48_000
   const context = new AudioContext({ sampleRate, latencyHint: "playback" })
-  await Decoder.addModule(context, "./decoder/decode-processor.js");
+  await Decoder.addModule(context, window.location.pathname + "/processor.js");
   const params = new URLSearchParams(`${window.location.search}&${window.location.hash.slice(1)}`)
   const decoder = Decoder.create(context, {
+    workerUrl: window.location.pathname + "/worker.js",
     websocketUrl: params.get("socket") ?? undefined
   });
   decoder.node.connect(context.destination)

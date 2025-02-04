@@ -35,9 +35,10 @@ export class Encoder {
       await ProcessorImport.promise
       return
     }
-    const str = macros.minified("src/encoder/encode-processor.ts")
-    const url = URL.createObjectURL(new Blob([str], { type: "application/javascript" }))
-    const promise = context.audioWorklet.addModule(moduleUrl ?? url)
+    const str = macros.minified("src/encoder/processor.ts")
+    const url = moduleUrl ?? URL.createObjectURL(new Blob([str], { type: "application/javascript" }))
+    console.log(`[encoder] addModule ${url}`)
+    const promise = context.audioWorklet.addModule(url)
     ProcessorImport.started = true
     await promise.catch(ProcessorImport.reject)
     ProcessorImport.done = true
@@ -51,8 +52,8 @@ export class Encoder {
       Encoder.addModule(context)
       throw new Error("[encoder] cannot create encoder before processor module added")
     }
-    const str = macros.minified("src/encoder/encode-worker.ts")
-    const url = URL.createObjectURL(new Blob([str], { type: "application/javascript" }))
+    const str = macros.minified("src/encoder/worker.ts")
+    const url = config.workerUrl ?? URL.createObjectURL(new Blob([str], { type: "application/javascript" }))
     const worker = new Worker(url, { type: "module" })
     console.log("[encoder] added worker", worker)
     const protocol = window.location.protocol.replace("http", "ws")
@@ -83,6 +84,7 @@ interface BufferMessage {
 }
 
 interface EncoderConfig {
+  workerUrl?: string
   websocketUrl?: string
   /** @default 48_000 */
   bitratePerChannel?: number

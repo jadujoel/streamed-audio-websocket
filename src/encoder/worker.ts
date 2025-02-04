@@ -1,5 +1,3 @@
-console.log("encode-worker.ts")
-
 const BYTE_SIZE = 8 as const
 const MILLION = 1_000_000 as const
 const KEY_OFFSET = 0 as const
