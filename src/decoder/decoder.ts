@@ -4,6 +4,18 @@ import type { BufferMessage } from './worker'
 const START_MESSAGE = { type: "start" } as const
 const STOP_MESSAGE = { type: "stop" } as const
 
+if (Promise.withResolvers === undefined) {
+  Promise.withResolvers = (() => {
+    let resolve
+    let reject
+    const promise = new Promise((resolve_, reject_) => {
+      resolve = resolve_
+      reject = reject_
+    })
+    return { promise, resolve, reject }
+  }) as any;
+}
+
 const ProcessorImport = {
   started: false,
   done: false,
