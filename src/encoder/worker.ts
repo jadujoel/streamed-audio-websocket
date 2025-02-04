@@ -36,7 +36,11 @@ type WorkerMessage = BufferMessage | StartMessage
 
 let state: "init" | "started" = "init"
 
+let errored = false
 self.onmessage = ({ data }: MessageEvent<WorkerMessage>) => {
+  if (errored) {
+    return
+  }
   const type = data.type
   if (type === "start") {
     if (state !== "init") {
@@ -56,11 +60,17 @@ self.onmessage = ({ data }: MessageEvent<WorkerMessage>) => {
     const dataSize = numFrames / BYTE_SIZE
     const chunkSize = dataSize + HEADER_SIZE
 
-    socket = new WebSocket(websocketUrl)
+    try {
+      socket = new WebSocket(websocketUrl)
+    } catch {
+      errored = true
+      return
+    }
     const socketReady = new Promise<void>((resolve) => {
       socket.onopen = () => { resolve() }
     })
     socket.onerror = (ev) => {
+      errored = true
     }
 
     const dataBuffer = new Uint8Array(dataSize)
@@ -68,13 +78,16 @@ self.onmessage = ({ data }: MessageEvent<WorkerMessage>) => {
     encoder = new AudioEncoder({
       error(error) {
         console.log("[encoder] error", error)
+        errored = true
       },
       output(chunk, meta) {
         if (socket.readyState !== globalThis.WebSocket.OPEN) {
           encoder.flush()
           try {
             socket = new WebSocket(websocketUrl)
-          } catch {}
+          } catch {
+            errored = true
+          }
           return
         }
         // console.log("[encoder] output", chunk)
