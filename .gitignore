@@ -1,0 +1,9 @@
+node_modules
+.env
+bun.lockb
+bun.lock
+*.DS_Store
+dist
+*.wav
+localhost.crt
+localhost.key
