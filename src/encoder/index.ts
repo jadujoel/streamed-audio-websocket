@@ -6,7 +6,7 @@ async function main() {
   const context = new AudioContext({ sampleRate: 48000, latencyHint: "playback" })
   await Encoder.addModule(context)
   const src = context.createBufferSource()
-  src.buffer = await fetchAudio(context, "/48kb.2ch.366384529314489.opus")
+  src.buffer = await fetchAudio(context, "../48kb.2ch.366384529314489.opus")
   let bitrate = 48_000
   const bitrateEl = selector({
     label: "Bitrate",
