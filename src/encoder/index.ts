@@ -6,7 +6,7 @@ async function main() {
   const context = new AudioContext({ sampleRate: 48000, latencyHint: "playback" })
   await Encoder.addModule(context)
   const src = context.createBufferSource()
-  src.buffer = await fetchAudio(context, "48kb.2ch.366384529314489.opus")
+  src.buffer = await fetchAudio(context, "/48kb.2ch.366384529314489.opus")
   let bitrate = 48_000
   const bitrateEl = selector({
     label: "Bitrate",
@@ -18,13 +18,16 @@ async function main() {
     }
   })
 
+  const params = new URLSearchParams(`${window.location.search}&${window.location.hash.slice(1)}`)
+
   const initEl = button({
     text: "Init",
     async onclick() {
       bitrateEl.remove()
       initEl.remove()
       const encoder = Encoder.create(context, {
-        bitratePerChannel: bitrate
+        bitratePerChannel: bitrate,
+        websocketUrl: params.get("socket") ?? undefined
       })
       src.connect(encoder.node).connect(context.destination)
 

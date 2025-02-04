@@ -11,15 +11,12 @@ async function main() {
   const sampleRate = 48_000
   const context = new AudioContext({ sampleRate, latencyHint: "playback" })
   await Decoder.addModule(context);
-  const decoder = Decoder.create(context);
+  const params = new URLSearchParams(`${window.location.search}&${window.location.hash.slice(1)}`)
+  const decoder = Decoder.create(context, {
+    websocketUrl: params.get("socket") ?? undefined
+  });
   decoder.node.connect(context.destination)
   return
-  // button({
-  //   text: "Start",
-  //   onclick: () => {
-  //     src.start()
-  //   }
-  // })
 }
 
 function button({ text, onclick }: { text?: string, onclick?: (this: GlobalEventHandlers, ev: MouseEvent) => void }) {
