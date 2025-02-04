@@ -4,8 +4,7 @@ const scripts = await Array.fromAsync(new Bun.Glob('src/**/*{.ts,.js}').scan())
 const options = {
   root: "src",
   // throw: false,
-  splitting: true,
-
+  splitting: false,
   entrypoints: [
     'src/index.html',
     'src/encoder/index.html',
