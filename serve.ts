@@ -41,6 +41,7 @@ const server = Bun.serve({
   },
   websocket: {
     open(ws) {
+      console.log("[ws] opened")
       ws.subscribe("stream")
     },
     close(ws, code, reason) {

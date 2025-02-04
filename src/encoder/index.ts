@@ -20,6 +20,14 @@ async function main() {
 
   const params = new URLSearchParams(`${window.location.search}&${window.location.hash.slice(1)}`)
 
+  function getWebSocketUrl() {
+    const socketParam = params.get("socket")
+    if (socketParam === null) {
+      return undefined
+    }
+    return decodeURIComponent(socketParam)
+  }
+
   const initEl = button({
     text: "Init",
     async onclick() {
@@ -27,7 +35,7 @@ async function main() {
       initEl.remove()
       const encoder = Encoder.create(context, {
         bitratePerChannel: bitrate,
-        websocketUrl: params.get("socket") ?? undefined,
+        websocketUrl: getWebSocketUrl(),
         workerUrl: window.location.pathname + "/worker.js"
       })
       src.connect(encoder.node).connect(context.destination)

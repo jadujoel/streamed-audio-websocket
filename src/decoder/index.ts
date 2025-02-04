@@ -14,9 +14,16 @@ async function main() {
   const params = new URLSearchParams(`${window.location.search}&${window.location.hash.slice(1)}`)
   const decoder = Decoder.create(context, {
     workerUrl: window.location.pathname + "/worker.js",
-    websocketUrl: params.get("socket") ?? undefined
+    websocketUrl: getWebSocketUrl()
   });
   decoder.node.connect(context.destination)
+  function getWebSocketUrl() {
+    const socketParam = params.get("socket")
+    if (socketParam === null) {
+      return undefined
+    }
+    return decodeURIComponent(socketParam)
+  }
   return
 }
 
