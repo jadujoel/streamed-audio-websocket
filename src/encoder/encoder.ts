@@ -27,7 +27,7 @@ export class Encoder {
     return ProcessorImport.done
   }
 
-  static async addModule(context: AudioContext): Promise<void> {
+  static async addModule(context: AudioContext, moduleUrl?: string): Promise<void> {
     if (ProcessorImport.done) {
       return
     }
@@ -37,7 +37,7 @@ export class Encoder {
     }
     const str = macros.minified("src/encoder/encode-processor.ts")
     const url = URL.createObjectURL(new Blob([str], { type: "application/javascript" }))
-    const promise = context.audioWorklet.addModule(url)
+    const promise = context.audioWorklet.addModule(moduleUrl ?? url)
     ProcessorImport.started = true
     await promise.catch(ProcessorImport.reject)
     ProcessorImport.done = true
@@ -56,10 +56,13 @@ export class Encoder {
     const worker = new Worker(url, { type: "module" })
     console.log("[encoder] added worker", worker)
     const protocol = window.location.protocol.replace("http", "ws")
+    const updatedConfig = {
+      ...config,
+      websocketUrl: config.websocketUrl ?? `${protocol}//${window.location.host}`,
+    }
     worker.postMessage({
       type: "start",
-      websocketUrl: config.websocketUrl ?? `${protocol}//${window.location.host}`,
-      ...config
+      ...updatedConfig
     })
     const node = new AudioWorkletNode(context, "encode-processor")
     node.port.onmessage = async (ev: MessageEvent<BufferMessage>) => {

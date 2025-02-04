@@ -28,7 +28,7 @@ export class Decoder {
     return ProcessorImport.done
   }
 
-  static async addModule(context: AudioContext): Promise<void> {
+  static async addModule(context: AudioContext, moduleUrl?: string): Promise<void> {
     if (ProcessorImport.done) {
       return
     }
@@ -38,7 +38,7 @@ export class Decoder {
     }
     const str = macros.minified("src/decoder/decode-processor.ts")
     const url = URL.createObjectURL(new Blob([str], { type: "application/javascript" }))
-    const promise = context.audioWorklet.addModule(url)
+    const promise = context.audioWorklet.addModule(moduleUrl ?? url)
     ProcessorImport.started = true
     await promise.catch(ProcessorImport.reject)
     ProcessorImport.done = true
@@ -46,8 +46,7 @@ export class Decoder {
   }
 
   static create(context: AudioContext, config: DecoderConfig = {}): Decoder | never {
-    console.log("Create Decoder", config)
-    console.log("[decoder] add worker")
+    console.log("[decoder] create", config)
     if (!Decoder.loaded) {
       Decoder.addModule(context)
       throw new Error("[decoder] cannot create decoder before processor module added")
@@ -55,18 +54,22 @@ export class Decoder {
     const str = macros.minified("src/decoder/decode-worker.ts")
     const url = URL.createObjectURL(new Blob([str], { type: "application/javascript" }))
     const worker = new Worker(url, { type: "module" })
-    console.log("[decoder] added worker", worker)
     worker.onmessage = ({ data }: MessageEvent<BufferMessage>) => {
       if (data.type === "buffer") {
         node.port.postMessage(data, [data.data])
       }
     }
     const protocol = window.location.protocol.replace("http", "ws")
+    const updatedConfig: DecoderConfig = {
+      ...config,
+      websocketUrl: config.websocketUrl ?? `${protocol}//${window.location.host}`,
+    }
+    console.log({config, updatedConfig})
     worker.postMessage({
       type: "start",
-      websocketUrl: config.websocketUrl ?? `${protocol}//${window.location.host}`,
-      ...config
+      ...updatedConfig
     })
+
     const node = new AudioWorkletNode(context, "decode-processor", {
       outputChannelCount: [2],
       numberOfInputs: 0,
