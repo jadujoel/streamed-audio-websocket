@@ -54,7 +54,6 @@ const server = Bun.serve({
     message(ws, message) {
       ws.publish("stream", message)
       longest = Math.max(message.length, longest)
-      // console.log("ws message", message.length, message)
     },
   }
 })

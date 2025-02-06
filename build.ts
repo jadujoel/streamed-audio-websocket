@@ -35,7 +35,7 @@ await Bun.build(options)
 //   console.log(out)
 // }
 
-const statics = await Array.fromAsync(new Bun.Glob('src/**/*{.wasm,.opus}').scan())
+const statics = await Array.fromAsync(new Bun.Glob('src/**/*{.wasm,.opus,.mp4,.ico,.wasm.mjs}').scan())
 for (const file of statics) {
   await Bun.write(file.replace('src/', 'dist/'), Bun.file(file))
 }

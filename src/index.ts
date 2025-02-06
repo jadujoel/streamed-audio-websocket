@@ -1,3 +1,4 @@
+import { toImport, wasmurl } from 'libav.js'
 import * as macros from "../macros" with { type: "macro" }
 import { start } from "can-start-audio-context"
 
@@ -31,9 +32,13 @@ async function main() {
       import("libavjs-webcodecs-polyfill")
     ]);
     const libavOptions = {
+      base: "encoder/",
+      toImport: "libav-6.5.7.1-default.wasm.mjs",
+      wasmurl: "libav-6.5.7.1-default.wasm.wasm",
       noworker: false,
       nothreads: true
     }
+    LibAV.toImport
     Object.assign(LibAV, libavOptions)
     Loader.load(load({
       LibAV,

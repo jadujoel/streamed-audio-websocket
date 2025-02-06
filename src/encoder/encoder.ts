@@ -120,8 +120,9 @@ async function pretendWorker(config: EncoderConfig) {
   const libavOptions = {
     wasmurl: "libav-6.5.7.1-default.wasm.wasm",
     toImport: "libav-6.5.7.1-default.wasm.mjs",
+    // base: "/polyfills/",
     noworker: false,
-    nothreads: true
+    nothreads: true,
   }
   Object.assign(LibAV, libavOptions)
   await load({
