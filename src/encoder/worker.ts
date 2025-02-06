@@ -1,3 +1,44 @@
+import LibAV from 'libav.js';
+import * as polyfills from "libavjs-webcodecs-polyfill"
+
+const originalFetch = globalThis.fetch
+globalThis.fetch = (...args) => {
+  console.log("FETCH", ...args)
+  return originalFetch(...args)
+}
+
+if (Promise.withResolvers === undefined) {
+  Promise.withResolvers = (() => {
+    let resolve
+    let reject
+    const promise = new Promise((resolve_, reject_) => {
+      resolve = resolve_
+      reject = reject_
+    })
+    return { promise, resolve, reject }
+  }) as any;
+}
+
+let loadPromise: undefined | Promise<void>
+if (globalThis.AudioData === undefined) {
+  const libavOptions = {
+    wasmurl: "../libav-6.5.7.1-default.wasm.wasm",
+    toImport: "../libav-6.5.7.1-default.wasm.mjs",
+    noworker: true,
+    base: "../libav/",
+    nothreads: true
+  }
+  Object.assign(LibAV, libavOptions)
+  console.log("INSTALLING POLYFILL")
+  loadPromise = polyfills.load({
+    LibAV,
+    polyfill: true,
+    libavOptions
+  }).then(() => {
+    console.log("installed polyfill")
+  })
+}
+
 const BYTE_SIZE = 8 as const
 const MILLION = 1_000_000 as const
 const KEY_OFFSET = 0 as const
@@ -37,8 +78,13 @@ type WorkerMessage = BufferMessage | StartMessage
 let state: "init" | "started" = "init"
 
 let errored = false
+
 self.onmessage = async ({ data }: MessageEvent<WorkerMessage>) => {
+  console.log("[worker] msg", data.type)
+  await loadPromise
+  console.log("awaited loadpromise")
   if (errored) {
+    console.log("ERRORED ALREADY")
     return
   }
   const type = data.type
@@ -81,6 +127,7 @@ self.onmessage = async ({ data }: MessageEvent<WorkerMessage>) => {
         errored = true
       },
       async output(chunk, meta) {
+        console.log("[worker] output", chunk)
         await socketReady
         if (socket.readyState !== globalThis.WebSocket.OPEN) {
           encoder.flush()
@@ -107,8 +154,10 @@ self.onmessage = async ({ data }: MessageEvent<WorkerMessage>) => {
         socket.send(sendView.buffer.slice(0, chunk.byteLength + HEADER_SIZE))
       },
     })
+    console.log("ENCODER", encoder)
     encoder.ondequeue = (ev) => {
     }
+    console.log("configure")
     encoder.configure({
       codec: codec,
       numberOfChannels,
@@ -120,9 +169,15 @@ self.onmessage = async ({ data }: MessageEvent<WorkerMessage>) => {
         frameDuration
       }
     })
+    console.log("configure done")
+
   } else if (type === "buffer") {
+    console.log("buffer message")
+    await loadPromise
+    console.log("buffer message loadpromise awaited")
+
     if (state !== "started") {
-      console.log("[worker] cannot encode before started")
+      console.log("[worker] cannot encode before started", state)
       return
     }
     const wavData = new AudioData({
@@ -134,6 +189,7 @@ self.onmessage = async ({ data }: MessageEvent<WorkerMessage>) => {
       numberOfFrames: data.numberOfFrames,
       transfer: [data.data]
     })
+    console.log("[worker] wavData", wavData)
     encoder.encode(wavData)
     // do not flush encoder it makes sound flutter
   }

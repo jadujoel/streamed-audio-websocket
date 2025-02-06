@@ -1,9 +1,14 @@
 import home from "./src/index.html"
 import encoder from "./src/encoder/index.html"
 import decoder from "./src/decoder/index.html"
+import encoderExample from "./src/encoder/example/index.html"
 
 const production = process.argv.includes("--production")
 const hostname = production ? "0.0.0.0" : "127.0.0.1"
+
+if (production) {
+  await Bun.$`bun build.ts`
+}
 
 let longest = 0
 const server = Bun.serve({
@@ -15,12 +20,11 @@ const server = Bun.serve({
     "/": home,
     "/encoder": encoder,
     "/decoder": decoder,
+    "/encoder/example": encoderExample
   },
   async fetch(request, server) {
     const pathname = new URL(request.url).pathname
     console.log("request", request.method, request.url, pathname)
-
-
     if (pathname.endsWith(".js")) {
       const result = await Bun.build({
         entrypoints: [`src${pathname}`],

@@ -40,7 +40,6 @@ let state: "init" | "started" = "init"
 const NUM_FRAMES = 360;
 const BYTE_SIZE = 8
 const copyBuffer = new Int16Array(NUM_FRAMES * BYTE_SIZE * numberOfChannels)
-// const copyBuffer = new Float32Array(NUM_FRAMES * BYTE_SIZE * numberOfChannels)
 const decoder = new AudioDecoder({
   error(error) {
     console.log("[decoder] error", error)
@@ -49,15 +48,7 @@ const decoder = new AudioDecoder({
     output.copyTo(copyBuffer, {
       planeIndex: 0,
       format: "s16"
-      // format: "s16-planar"
-      // format: "f32"
     })
-    // if (output.duration !== 60_000) {
-    //   return
-    // }
-    // let index = Math.floor(output.timestamp * sampleRate / 1_000_000)
-    // const ns = output.duration * sampleRate / 1_000_000
-    // const nf = output.numberOfFrames
     const msg: BufferMessage = {
       type: "buffer",
       data: copyBuffer.buffer,
@@ -91,9 +82,6 @@ self.onmessage = ({ data }: MessageEvent<WorkerMessage>) => {
     ws.onmessage = async (ev: MessageEvent<string | Blob>) => {
       if (typeof ev.data === "string") {
         console.log("[ws] message", ev.data)
-        if (ev.data === "start-decode") {
-
-        }
         return
       }
       const view = new DataView(await ev.data.arrayBuffer())
@@ -106,7 +94,7 @@ self.onmessage = ({ data }: MessageEvent<WorkerMessage>) => {
         data: data,
         transfer: [view.buffer, data]
       })
-
+      console.log("[worker] chunk", encodedChunk)
       if (decoder.state === "configured") {
         // do not flush decoder it messes up the audio
         decoder.decode(encodedChunk)

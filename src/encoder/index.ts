@@ -1,35 +1,25 @@
-import { canStart } from '../tools'
+import { start } from 'can-start-audio-context'
 import { Encoder } from "./encoder"
-console.log("encoder.ts")
 
 main()
 async function main() {
   document.body.innerText = "Click To Start"
-  await canStart()
+  const context = await start(undefined, { sampleRate: 48000, latencyHint: "playback" })
   document.body.innerText = ""
-
-  const context = new AudioContext({ sampleRate: 48000, latencyHint: "playback" })
   await Encoder.addModule(context) // , window.location.pathname + "/processor.js")
   const src = context.createBufferSource()
-  await fetchAudio(context, "../48kb.2ch.366384529314489.opus").then((v) => src.buffer = v)
+  await fetchAudio(context, "../48kb.2ch.366384529314489.opus")
+    .catch((v) => fetchAudio(context, "../48kb.2ch.366384529314489.mp4"))
+    .then((v) => src.buffer = v)
   let bitrate = 48_000
 
   const gain = context.createGain()
-  // const bitrateEl = selector({
-  //   label: "Bitrate",
-  //   alternatives: ["12b", "24kb", "48kb", "96kb"],
-  //   selected: 2,
-  //   onchange(index) {
-  //     bitrate = [12_000, 24_000, 48_000, 96_000][index]
-  //     console.log(`Selected index ${index} with bitrate ${bitrate}`)
-  //   }
-  // })
   const params = new URLSearchParams(`${window.location.search}&${window.location.hash.slice(1)}`)
 
   const encoder = Encoder.create(context, {
     bitratePerChannel: bitrate,
     websocketUrl: getWebSocketUrl(),
-    // workerUrl: window.location.pathname + "/worker.js"
+    workerUrl: window.location.pathname + "/worker.js"
   })
   src.connect(gain).connect(encoder.node).connect(context.destination)
   encoder.start()

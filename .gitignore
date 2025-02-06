@@ -7,3 +7,4 @@ dist
 *.wav
 localhost.crt
 localhost.key
+ignore/
