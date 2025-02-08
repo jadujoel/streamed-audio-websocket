@@ -49,7 +49,6 @@ export function init() {
       return
     }
     const type = data.type
-    console.log("[worker] message", data)
     if (type === "port") {
       data.port.start()
       data.port.onmessage = onlymessage

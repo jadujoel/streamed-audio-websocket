@@ -100,7 +100,7 @@ export function init() {
 
   async function onmessage ({ data }: MessageEvent<WorkerMessage>) {
     const type = data.type
-    console.log("[decode.worker] msg", data)
+    console.log("[worker] msg", data)
     if (type === "start") {
       if (data.isPolyfill) {
         isPolyfill = true
