@@ -13,7 +13,7 @@ async function installWebCodecs() {
       base += "/streamed-audio-websocket"
     }
     const wasmurl = `${base}/libav-6.5.7.1-default.wasm.wasm`
-    const toImport = `${base}/${window.location.pathname}/libav-6.5.7.1-default.wasm.mjs`
+    const toImport = `${base}/libav-6.5.7.1-default.wasm.mjs`
     const libavOptions = {
       wasmurl,
       toImport,
