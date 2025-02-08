@@ -8,9 +8,15 @@ import { WorkerLike, type WorkerLikeInit } from './worker-like';
 
 async function installWebCodecs() {
   if (globalThis.AudioEncoder === undefined) {
+    let base = window.location.origin
+    if (window.location.host === "jadujoel.github.io") {
+      base += "/streamed-audio-websocket"
+    }
+    const wasmurl = `${base}/libav-6.5.7.1-default.wasm.wasm`
+    const toImport = `${base}/${window.location.pathname}/libav-6.5.7.1-default.wasm.mjs`
     const libavOptions = {
-      wasmurl: "/libav-6.5.7.1-default.wasm.wasm",
-      toImport: "/libav-6.5.7.1-default.wasm.mjs",
+      wasmurl,
+      toImport,
       noworker: false,
       nothreads: true,
     }
