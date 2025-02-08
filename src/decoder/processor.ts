@@ -17,8 +17,9 @@ interface StopMessage {
   type: "stop";
 }
 
-interface BufferItem extends Omit<BufferMessage, 'data'> {
-  readonly data: Int16Array
+interface BufferItem extends Omit<BufferMessage, 'left' | 'right' | 'data'> {
+  readonly left: Float32Array
+  readonly right: Float32Array
 }
 
 class DecodeProcessor extends globalThis.AudioWorkletProcessor {
@@ -58,9 +59,11 @@ class DecodeProcessor extends globalThis.AudioWorkletProcessor {
   }
 
   onbuffermessage(data: BufferMessage) {
+    const pcm_planar = new Float32Array(data.data)
     this.queue.push({
       ...data,
-      data: new Int16Array(data.data)
+      left: pcm_planar.subarray(0, data.numberOfFrames),
+      right: pcm_planar.subarray(data.numberOfFrames)
     });
     if (this.currentItemIndex > 0) {
       this.queue.splice(0, this.currentItemIndex)
@@ -116,12 +119,14 @@ class DecodeProcessor extends globalThis.AudioWorkletProcessor {
       this.stop()
       return true
     }
-    let i16 = this.queue[this.currentItemIndex].data
+    let buffer_left = item.left
+    let buffer_right = item.right
 
     for (let i = 0; i < left.length; i++) {
-      const index = this.currentFrame * 2
-      left[i] = i16[index] / 0x7FFF;
-      right[i] = i16[index + 1] / 0x7FFF;
+      const index = this.currentFrame
+      left[i] = buffer_left[index];
+      // right[i] = buffer_right[index]
+      right[i] = buffer_right[index]
       this.currentFrame += 1
       if (this.currentFrame >= item.numberOfFrames) {
         this.currentFrame = 0
@@ -133,7 +138,8 @@ class DecodeProcessor extends globalThis.AudioWorkletProcessor {
           this.stop()
           return true
         }
-        i16 = item.data
+        buffer_left = item.left
+        buffer_right = item.right
       }
     }
     return true;

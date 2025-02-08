@@ -8,8 +8,7 @@ async function main() {
   document.body.innerText = ""
   await Encoder.addModule(context) // , window.location.pathname + "/processor.js")
   const src = context.createBufferSource()
-  await fetchAudio(context, "../48kb.2ch.366384529314489.opus")
-    .catch((v) => fetchAudio(context, "../48kb.2ch.366384529314489.mp4"))
+  await fetchAudio(context, "/48kb.2ch.366384529314489.mp4")
     .then((v) => src.buffer = v)
   let bitrate = 48_000
 

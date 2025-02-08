@@ -11,7 +11,7 @@ export async function serve() {
     development: !production,
     async fetch(request) {
       let pathname = new URL(request.url).pathname
-      console.log("[serve]", pathname)
+      console.log("[serve]", pathname, request.url)
       if (pathname.endsWith("/")) {
         pathname += "index.html"
       } else if (!pathname.includes(".")) {

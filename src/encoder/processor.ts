@@ -51,6 +51,7 @@ class EncodeProcessor extends globalThis.AudioWorkletProcessor {
 
   onmessage: (ev: MessageEvent<StreamMessage>) => void = (ev) => {
     const data = ev.data;
+    console.log("[encode-processor] message", data)
     switch (data.type) {
       case "start":
         this.onstartmessage(data)

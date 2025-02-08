@@ -1,5 +1,6 @@
 import * as macros from "../../macros" with { type: "macro" }
-import type { BufferMessage } from './worker'
+import type { BufferMessage, StartMessage } from './worker'
+import { SafariDecodeWorker } from './worker-shim'
 
 const START_MESSAGE = { type: "start" } as const
 const STOP_MESSAGE = { type: "stop" } as const
@@ -66,22 +67,16 @@ export class Decoder {
     }
     const str = macros.minified("src/decoder/worker.ts")
     const url = config.workerUrl ?? URL.createObjectURL(new Blob([str], { type: "application/javascript" }))
-    const worker = new Worker(url, { type: "module" })
-    worker.onmessage = ({ data }: MessageEvent<BufferMessage>) => {
-      if (data.type === "buffer") {
-        node.port.postMessage(data, [data.data])
-      }
-    }
+    const needsShim = globalThis.AudioDecoder === undefined
+    const worker = needsShim
+      ? SafariDecodeWorker()
+      : new Worker(url, { type: "module" })
+
     const protocol = window.location.protocol.replace("http", "ws")
-    const updatedConfig: DecoderConfig = {
+    const updatedConfig = {
       ...config,
       websocketUrl: config.websocketUrl ?? `${protocol}//${window.location.host}`,
-    }
-    worker.postMessage({
-      type: "start",
-      ...updatedConfig
-    })
-
+    } as const satisfies DecoderConfig
     const node = new AudioWorkletNode(context, "decode-processor", {
       outputChannelCount: [2],
       numberOfInputs: 0,
@@ -90,6 +85,12 @@ export class Decoder {
       channelInterpretation: "speakers",
       numberOfOutputs: 1,
     })
+    worker.postMessage(<StartMessage> {
+      type: "start",
+      port: node.port,
+      isPolyfill: needsShim,
+      ...updatedConfig
+    }, [node.port])
     return new Decoder(context, node)
   }
 }
