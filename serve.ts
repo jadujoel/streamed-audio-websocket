@@ -19,7 +19,9 @@ const server = Bun.serve({
   static: {
     "/": home,
     "/encoder": encoder,
+    "/encoder/": encoder,
     "/decoder": decoder,
+    "/decoder/": decoder,
     "/encoder/example": encoderExample
   },
   async fetch(request, server) {

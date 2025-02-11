@@ -111,6 +111,8 @@ export function init() {
         if (typeof ev.data === "string") {
           console.log("[ws] message", ev.data)
           return
+        } else {
+          // console.log("[ws] message", ev.data.length)
         }
         const view = new DataView(await ev.data.arrayBuffer())
         const type =  view.getUint32(KEY_OFFSET) === 0 ? "key" : "delta"

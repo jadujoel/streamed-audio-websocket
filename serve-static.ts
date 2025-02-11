@@ -10,8 +10,9 @@ export async function serve() {
     key: production ? Bun.file("./localhost.key") : undefined,
     development: !production,
     async fetch(request) {
-      let pathname = new URL(request.url).pathname
-      console.log("[serve]", pathname, request.url)
+      const url = new URL(request.url)
+      let pathname = url.pathname
+      console.log("[serve]", url.href, request.destination, request.referrer)
       if (pathname.endsWith("/")) {
         pathname += "index.html"
       } else if (!pathname.includes(".")) {

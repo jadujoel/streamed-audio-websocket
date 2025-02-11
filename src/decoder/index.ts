@@ -13,6 +13,7 @@ async function main() {
 
   status.update("Creating Decoder")
   const decoder = Decoder.create(context, {
+    workerUrl: "./worker.js",
     websocketUrl: getWebSocketUrl()
   });
   decoder.node.connect(context.destination)

@@ -60,10 +60,6 @@ export class Encoder {
       type: "port",
       port: node.port,
     }, [node.port])
-    // node.port.onmessage = async (ev: MessageEvent<BufferMessage>) => {
-    //   const worker = await workerPromise
-    //   worker.postMessage(ev.data, [ev.data.data])
-    // }
     return new Encoder(context, node)
   }
 }
